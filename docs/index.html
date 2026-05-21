@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Esslayit</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f6f2ea;
+        color: #1d1b18;
+        line-height: 1.5;
+      }
+
+      .page-shell {
+        width: min(1040px, calc(100% - 28px));
+        margin: 0 auto;
+        padding: 28px 0;
+      }
+
+      .hero,
+      .checker,
+      .results {
+        background: #fffaf2;
+        border: 1px solid #d8cfc0;
+        border-radius: 18px;
+        padding: 20px;
+        margin-bottom: 16px;
+      }
+
+      .eyebrow {
+        margin: 0 0 8px;
+        color: #58351d;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+      }
+
+      h1,
+      h2,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 8px;
+        font-size: clamp(2.1rem, 12vw, 4.4rem);
+        line-height: 1;
+      }
+
+      .intro,
+      .helper,
+      .summary {
+        color: #5f5a52;
+      }
+
+      .controls {
+        display: grid;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      label {
+        font-weight: 700;
+      }
+
+      input,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input {
+        width: 120px;
+        padding: 10px;
+        border: 1px solid #d8cfc0;
+        border-radius: 10px;
+        color: #1d1b18;
+        background: #ffffff;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 280px;
+        resize: vertical;
+        border: 1px solid #d8cfc0;
+        border-radius: 14px;
+        padding: 16px;
+        color: #1d1b18;
+        background: #ffffff;
+      }
+
+      textarea:focus,
+      input:focus,
+      button:focus {
+        outline: 3px solid #c8aa8b;
+        outline-offset: 2px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 14px;
+        flex-wrap: wrap;
+      }
+
+      button {
+        border: 0;
+        border-radius: 999px;
+        padding: 12px 18px;
+        font-weight: 700;
+        cursor: pointer;
+        color: #1d1b18;
+        background: #d7bea7;
+      }
+
+      button:hover {
+        background: #caa789;
+      }
+
+      button.secondary {
+        background: #eadfce;
+      }
+
+      .summary {
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid #d8cfc0;
+      }
+
+      .issues {
+        display: grid;
+        gap: 12px;
+        margin-top: 14px;
+      }
+
+      .issue-card {
+        border: 1px solid #d8cfc0;
+        border-left: 6px solid #7d4d2a;
+        border-radius: 14px;
+        padding: 14px 16px;
+        background: #ffffff;
+      }
+
+      .issue-meta {
+        margin-bottom: 6px;
+        color: #58351d;
+        font-weight: 700;
+      }
+
+      .excerpt {
+        padding: 10px;
+        background: #fff4d8;
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Phone-friendly version</p>
+        <h1 id="page-title">Esslayit</h1>
+        <p class="intro">Paste your writing and get review prompts directly in your browser. This version runs on the page, so it does not need Python, Bash, or a local server.</p>
+      </section>
+
+      <section class="checker" aria-labelledby="checker-title">
+        <h2 id="checker-title">Check your writing</h2>
+        <p class="helper">Suggestions are prompts to review, not automatic corrections.</p>
+
+        <div class="controls">
+          <label for="max-sentence-words">Sentence limit</label>
+          <input id="max-sentence-words" type="number" min="5" max="80" value="32">
+        </div>
+
+        <label for="writing-input">Text to check</label>
+        <textarea id="writing-input" spellcheck="true" placeholder="Paste your paragraph here..."></textarea>
+
+        <div class="actions">
+          <button id="check-button" type="button">Check text</button>
+          <button id="clear-button" type="button" class="secondary">Clear</button>
+        </div>
+      </section>
+
+      <section class="results" aria-live="polite" aria-labelledby="results-title">
+        <h2 id="results-title">Results</h2>
+        <div id="summary" class="summary">No text checked yet.</div>
+        <div id="issues" class="issues"></div>
+      </section>
+    </main>
+
+    <script>
+      const input = document.querySelector("#writing-input");
+      const maxSentenceWords = document.querySelector("#max-sentence-words");
+      const checkButton = document.querySelector("#check-button");
+      const clearButton = document.querySelector("#clear-button");
+      const summary = document.querySelector("#summary");
+      const issues = document.querySelector("#issues");
+
+      const fillerPhrases = new Map([
+        ["basically", "Use a more precise word or remove it."],
+        ["actually", "Remove it unless it changes the meaning."],
+        ["really", "Replace it with a specific description."],
+        ["very", "Replace it with a stronger or more exact word."],
+        ["in order to", "Use 'to' unless the longer phrase is needed for emphasis."],
+        ["it is important to note that", "State the point directly."],
+        ["due to the fact that", "Use 'because'."]
+      ]);
+
+      checkButton.addEventListener("click", () => {
+        const text = input.value.trim();
+
+        if (!text) {
+          summary.textContent = "Paste some text first.";
+          issues.innerHTML = "";
+          input.focus();
+          return;
+        }
+
+        const maxWords = clamp(Number(maxSentenceWords.value) || 32, 5, 80);
+        renderResults(checkText(text, maxWords));
+      });
+
+      clearButton.addEventListener("click", () => {
+        input.value = "";
+        summary.textContent = "No text checked yet.";
+        issues.innerHTML = "";
+        input.focus();
+      });
+
+      function checkText(text, maxWords) {
+        const foundIssues = [];
+        checkRepeatedWords(text, foundIssues);
+        checkFillerPhrases(text, foundIssues);
+        checkSentences(text, maxWords, foundIssues);
+        checkPassiveHints(text, foundIssues);
+        foundIssues.sort((a, b) => a.line - b.line || a.column - b.column || a.rule_id.localeCompare(b.rule_id));
+        return foundIssues;
+      }
+
+      function checkRepeatedWords(text, foundIssues) {
+        const repeatedWord = /\b([A-Za-z]+)\s+\1\b/gi;
+        for (const match of text.matchAll(repeatedWord)) {
+          const word = match[1];
+          foundIssues.push(makeIssue(text, match.index, "REPEATED_WORD", `'${word}' appears twice in a row.`, `Remove one '${word}' unless the repetition is intentional.`, match[0]));
+        }
+      }
+
+      function checkFillerPhrases(text, foundIssues) {
+        fillerPhrases.forEach((suggestion, phrase) => {
+          const pattern = new RegExp(`\\b${escapeRegExp(phrase)}\\b`, "gi");
+          for (const match of text.matchAll(pattern)) {
+            foundIssues.push(makeIssue(text, match.index, "FILLER_PHRASE", `'${match[0]}' may weaken the sentence.`, suggestion, match[0]));
+          }
+        });
+      }
+
+      function checkSentences(text, maxWords, foundIssues) {
+        const sentencePattern = /[^.!?]+[.!?]?/g;
+        for (const match of text.matchAll(sentencePattern)) {
+          const sentence = match[0].trim();
+          if (!sentence) continue;
+
+          const words = sentence.match(/\b[\w']+\b/g) || [];
+          if (words.length > maxWords) {
+            foundIssues.push(makeIssue(text, match.index, "LONG_SENTENCE", `This sentence has ${words.length} words. The current limit is ${maxWords}.`, "Split the sentence or make the cause and effect easier to follow.", shorten(sentence)));
+          }
+
+          const commaCount = (sentence.match(/,/g) || []).length;
+          if (commaCount >= 3) {
+            foundIssues.push(makeIssue(text, match.index, "LIST_HEAVY_SENTENCE", `This sentence has ${commaCount} commas.`, "Check whether the sentence is listing examples instead of explaining the point.", shorten(sentence)));
+          }
+        }
+      }
+
+      function checkPassiveHints(text, foundIssues) {
+        const passiveHint = /\b(is|are|was|were|be|been|being)\s+([a-z]+ed|known|seen|made|given|taken|shown)\b/gi;
+        for (const match of text.matchAll(passiveHint)) {
+          foundIssues.push(makeIssue(text, match.index, "PASSIVE_VOICE_HINT", `'${match[0]}' may be passive voice.`, "Check whether the sentence needs the actor, or keep it if the actor is not relevant.", match[0]));
+        }
+      }
+
+      function makeIssue(text, index, ruleId, message, suggestion, excerpt) {
+        const location = lineColumn(text, index);
+        return {
+          rule_id: ruleId,
+          message,
+          suggestion,
+          excerpt,
+          line: location.line,
+          column: location.column
+        };
+      }
+
+      function lineColumn(text, index) {
+        const before = text.slice(0, index);
+        const lines = before.split("\n");
+        return {
+          line: lines.length,
+          column: lines[lines.length - 1].length + 1
+        };
+      }
+
+      function renderResults(foundIssues) {
+        if (foundIssues.length === 0) {
+          summary.textContent = "No review prompts found.";
+          issues.innerHTML = "";
+          return;
+        }
+
+        summary.textContent = `${foundIssues.length} review prompt${foundIssues.length === 1 ? "" : "s"} found.`;
+        issues.innerHTML = "";
+
+        foundIssues.forEach((issue) => {
+          const card = document.createElement("article");
+          card.className = "issue-card";
+
+          const meta = document.createElement("div");
+          meta.className = "issue-meta";
+          meta.textContent = `${issue.rule_id} at line ${issue.line}, column ${issue.column}`;
+
+          const message = document.createElement("p");
+          message.textContent = issue.message;
+
+          const suggestion = document.createElement("p");
+          suggestion.textContent = `Suggestion: ${issue.suggestion}`;
+
+          const excerpt = document.createElement("p");
+          excerpt.className = "excerpt";
+          excerpt.textContent = issue.excerpt;
+
+          card.append(meta, message, suggestion, excerpt);
+          issues.appendChild(card);
+        });
+      }
+
+      function escapeRegExp(value) {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function shorten(value, limit = 120) {
+        const clean = value.replace(/\s+/g, " ").trim();
+        return clean.length <= limit ? clean : `${clean.slice(0, limit - 1)}…`;
+      }
+
+      function clamp(value, min, max) {
+        return Math.min(Math.max(value, min), max);
+      }
+    </script>
+  </body>
+</html>
