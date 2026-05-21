@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Esslayit</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="page-shell">
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Essay-focused writing checks</p>
+        <h1 id="page-title">Esslayit</h1>
+        <p class="intro">
+          Paste a paragraph and review prompts for repeated words, long sentences,
+          filler phrases, list-heavy phrasing, and possible passive voice.
+        </p>
+      </section>
+
+      <section class="checker" aria-labelledby="checker-title">
+        <div class="checker-header">
+          <div>
+            <h2 id="checker-title">Check your writing</h2>
+            <p>Suggestions are prompts to review, not automatic corrections.</p>
+          </div>
+          <label class="limit-control">
+            Sentence limit
+            <input id="max-sentence-words" type="number" min="5" max="80" value="32">
+          </label>
+        </div>
+
+        <label for="writing-input" class="input-label">Text to check</label>
+        <textarea id="writing-input" spellcheck="true" placeholder="Paste your paragraph here..."></textarea>
+
+        <div class="actions">
+          <button id="check-button" type="button">Check text</button>
+          <button id="clear-button" type="button" class="secondary">Clear</button>
+        </div>
+      </section>
+
+      <section class="results" aria-live="polite" aria-labelledby="results-title">
+        <h2 id="results-title">Results</h2>
+        <div id="summary" class="summary">No text checked yet.</div>
+        <div id="issues" class="issues"></div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
