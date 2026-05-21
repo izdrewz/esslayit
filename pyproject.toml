@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "esslayit"
+version = "0.1.0"
+description = "An original essay-focused writing assistant."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Izzy" }
+]
+keywords = ["writing", "grammar", "essays", "markdown", "cli"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+[project.scripts]
+esslayit = "esslayit.__main__:main"
+
+[tool.setuptools]
+packages = ["esslayit"]
