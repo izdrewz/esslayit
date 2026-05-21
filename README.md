@@ -7,6 +7,7 @@ It is not a Grammarly clone and does not unlock or copy any proprietary Grammarl
 ## What is included
 
 - A Python command-line checker.
+- A local web app for pasting and checking text in the browser.
 - Lightweight writing rules with no paid API required.
 - Unit tests using Python's built-in `unittest` module.
 - A GitHub Action for running checks on pushes and pull requests.
@@ -39,6 +40,26 @@ Fail when issues are found, which is useful for CI:
 python -m esslayit README.md --fail-on-issues
 ```
 
+## Run the web app
+
+Start the local web app:
+
+```bash
+python -m esslayit.server
+```
+
+Then open this address in your browser:
+
+```text
+http://127.0.0.1:8000
+```
+
+If Esslayit is installed as a package, you can also run:
+
+```bash
+esslayit-web
+```
+
 ## Rule types
 
 Esslayit currently includes simple rule-based checks:
@@ -57,7 +78,7 @@ These rules are deliberately cautious. A suggestion is not automatically a mista
 
 Useful next steps would be:
 
-- Add a web interface for pasting essay paragraphs.
+- Add paragraph-level essay feedback.
 - Add a VS Code extension.
 - Add optional LanguageTool support.
 - Add clearer explanations for why each suggestion appears.
