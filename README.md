@@ -9,7 +9,7 @@ It is not a Grammarly clone and does not unlock or copy any proprietary Grammarl
 - A Python command-line checker.
 - Lightweight writing rules with no paid API required.
 - Unit tests using Python's built-in `unittest` module.
-- A GitHub Action plan for running checks on pushes and pull requests.
+- A GitHub Action for running checks on pushes and pull requests.
 
 ## Quick start
 
